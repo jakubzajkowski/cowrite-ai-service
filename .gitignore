@@ -75,7 +75,7 @@ dmypy.json
 
 # dotenv environment variables file
 .env
-.env.*
+.env.local
 
 # FastAPI / Uvicorn specific
 *.db
