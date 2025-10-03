@@ -32,6 +32,12 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
+      - name: Run Black (format check)
+        run: black --check app/ tests/
+
+      - name: Run Pylint
+        run: pylint app/ tests/
+
       - name: Run tests
         run: pytest
 

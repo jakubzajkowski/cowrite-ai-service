@@ -2,3 +2,5 @@ fastapi[all]
 uvicorn[standard]
 pytest
 httpx
+pylint
+black
