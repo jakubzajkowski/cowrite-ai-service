@@ -4,3 +4,7 @@ pytest
 httpx
 pylint
 black
+python-dotenv
+pydantic
+pydantic-settings
+google-genai
