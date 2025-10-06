@@ -6,10 +6,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings."""
 
-    gemini_api_key: str
-    user_service_url: str
-    user_cookie_name: str
-    database_url: str
+    gemini_api_key: str = "test_key"
+    user_service_url: str = "http://localhost"
+    user_cookie_name: str = "COWRITE_SESSION_ID"
+    database_url: str = "sqlite+aiosqlite:///:memory:"
 
     class Config:
         """Pydantic configuration."""
