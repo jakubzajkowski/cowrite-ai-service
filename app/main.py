@@ -8,22 +8,28 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.test import router as users_router
 from app.api.v1.chat import router as chat_router
-
-app = FastAPI(title="Example FastAPI App")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:8080"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
-app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
+from app.core.settings import Settings
 
 
-@app.get("/health")
-async def health_check():
-    """Return a simple health status payload for uptime probes."""
-    return {"status": "ok"}
+def create_app(settings: Settings | None = None) -> FastAPI:
+    """Create and configure FastAPI app instance."""
+    app = FastAPI(title="Example FastAPI App")
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://localhost:8080"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
+    app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
+
+    @app.get("/health")
+    async def health_check():
+        return {"status": "ok"}
+
+    app.state.settings = settings or Settings()
+
+    return app
