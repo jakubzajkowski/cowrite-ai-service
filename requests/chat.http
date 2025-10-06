@@ -1,0 +1,13 @@
+### Create a new conversation
+POST http://localhost:8000/api/v1/chat/conversations
+Content-Type: application/json
+Cookie: COWRITE_SESSION_ID=
+
+{
+  "title": "Chat with Neko"
+}
+
+### Get all conversations for the user
+GET http://localhost:8000/api/v1/chat/conversations
+Content-Type: application/json
+Cookie: COWRITE_SESSION_ID=

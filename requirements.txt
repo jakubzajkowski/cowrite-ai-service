@@ -8,3 +8,7 @@ python-dotenv
 pydantic
 pydantic-settings
 google-genai
+httpx
+sqlalchemy
+asyncpg
+psycopg2-binary
