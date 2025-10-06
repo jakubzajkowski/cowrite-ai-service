@@ -12,3 +12,4 @@ httpx
 sqlalchemy
 asyncpg
 psycopg2-binary
+aiosqlite
