@@ -4,6 +4,7 @@ This module provides a GeminiClient class that can generate text based on a give
 It reads the API key from the application's settings and interfaces with the Google GenAI SDK.
 """
 
+import asyncio
 from google import genai
 from google.genai import types
 
@@ -36,8 +37,20 @@ class GeminiClient:
             ),
             contents=prompt,
         )
-        print(response.text)
         return response
+
+    async def generate_text_async(self, prompt: str, model: str = "gemini-2.5-flash"):
+        """
+        Async wrapper for generate_text – runs in a thread to avoid blocking event loop.
+        Args:
+            prompt (str): The text prompt to generate content from.
+            model (str, optional): The Gemini model to use. Defaults to "gemini-2.5-flash".
+
+        Returns:
+            response: The response object from the Gemini API containing generated text.
+        """
+        response = await asyncio.to_thread(self.generate_text, prompt, model)
+        return response.text
 
 
 gemini_service = GeminiClient()
