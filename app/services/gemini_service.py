@@ -9,6 +9,7 @@ from google import genai
 from google.genai import types
 
 from app.core.settings import settings
+from prompts.assistant_prompt_v1 import MARKDOWN_ASSISTANT_PROMPT_V1
 
 
 class GeminiClient:
@@ -33,7 +34,7 @@ class GeminiClient:
         response = self.client.models.generate_content(
             model=model,
             config=types.GenerateContentConfig(
-                system_instruction="You are a cat. Your name is Neko."
+                system_instruction=MARKDOWN_ASSISTANT_PROMPT_V1
             ),
             contents=prompt,
         )

@@ -1,7 +1,7 @@
 ### Create a new conversation
 POST http://localhost:8000/api/v1/chat/conversations
 Content-Type: application/json
-Cookie: COWRITE_SESSION_ID=
+Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjEiLCJpYXQiOjE3NTk4MzA2NzQsImV4cCI6MTc1OTgzNDI3NH0.41Xp5b9ooyBId1dKN3Ns-1N3NiQv4PtgdL4u_XJALmI; Max-Age=3600; Expires=Tue, 07 Oct 2025 10:51:14 GMT; Path=/; HttpOnly
 
 {
   "title": "Chat with Neko"
@@ -10,4 +10,4 @@ Cookie: COWRITE_SESSION_ID=
 ### Get all conversations for the user
 GET http://localhost:8000/api/v1/chat/conversations
 Content-Type: application/json
-Cookie: COWRITE_SESSION_ID=
+Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjEiLCJpYXQiOjE3NTk4MjY3NjAsImV4cCI6MTc1OTgzMDM2MH0.dFMd1FU_S7FUSWrCQh_R-b2Le7rAd7nGEaTshgZSdbE; Max-Age=3600; Expires=Tue, 07 Oct 2025 09:46:00 GMT; Path=/; HttpOnly
