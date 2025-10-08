@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY ./app ./app
 COPY ./prompts ./prompts
+COPY ./alembic ./alembic
+COPY ./alembic.ini .     
 
 EXPOSE 8000
 
