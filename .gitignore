@@ -80,7 +80,7 @@ dmypy.json
 # FastAPI / Uvicorn specific
 *.db
 *.sqlite3
-alembic.ini
+*.sqlite
 
 # Optional: node_modules if using frontend with FastAPI
 node_modules/

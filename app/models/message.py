@@ -1,7 +1,5 @@
 from sqlalchemy import BigInteger, Column, Integer, String, Text, TIMESTAMP, func
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
+from app.db.base import Base
 
 
 class Message(Base):
