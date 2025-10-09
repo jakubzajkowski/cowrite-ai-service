@@ -6,10 +6,10 @@ Exposes:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.v1.test import router as users_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.ws_chat import router as ws_chat_router
-from prometheus_fastapi_instrumentator import Instrumentator
 
 
 def create_app() -> FastAPI:
