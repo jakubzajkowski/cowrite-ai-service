@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.test import router as users_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.ws_chat import router as ws_chat_router
+from prometheus_fastapi_instrumentator import Instrumentator
 
 
 def create_app() -> FastAPI:
@@ -26,6 +27,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    Instrumentator().instrument(_app).expose(_app)
 
     _app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
     _app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])

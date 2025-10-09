@@ -14,3 +14,4 @@ asyncpg
 psycopg2-binary
 aiosqlite
 alembic
+prometheus-fastapi-instrumentator
