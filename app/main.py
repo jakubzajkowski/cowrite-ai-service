@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
     Instrumentator().instrument(_app).expose(_app)
 
     _app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
-    _app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
+    _app.include_router(chat_router, prefix="", tags=["chat"])
     _app.include_router(ws_chat_router, tags=["websocket"])
 
     @_app.get("/health")

@@ -14,7 +14,7 @@ async def verify_user(token: str) -> dict | None:
     async with httpx.AsyncClient() as client:
         try:
             resp = await client.get(
-                f"{settings.user_service_url}/api/auth/me",
+                f"{settings.user_service_url}/me",
                 cookies={settings.user_cookie_name: token},
             )
             if resp.status_code == 200:
