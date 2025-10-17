@@ -7,7 +7,6 @@ Exposes:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
-from app.api.v1.test import router as users_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.ws_chat import router as ws_chat_router
 
@@ -30,7 +29,6 @@ def create_app() -> FastAPI:
 
     Instrumentator().instrument(_app).expose(_app)
 
-    _app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
     _app.include_router(chat_router, prefix="", tags=["chat"])
     _app.include_router(ws_chat_router, tags=["websocket"])
 
