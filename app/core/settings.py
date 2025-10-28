@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     user_service_url: str = "http://localhost"
     user_cookie_name: str = "COWRITE_SESSION_ID"
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/app_db"
+    jwt_secret_key: str = "your_jwt_secret_key_here"
 
     class Config:
         """Pydantic configuration."""

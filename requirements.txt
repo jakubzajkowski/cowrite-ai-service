@@ -16,3 +16,4 @@ aiosqlite
 alembic
 prometheus-fastapi-instrumentator
 testcontainers[postgresql]
+PyJWT
