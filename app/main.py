@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.v1.chat import router as chat_router
 from app.api.v1.ws_chat import router as ws_chat_router
+from app.api.v1.upload import router as upload_router
 from app.services.s3_service import s3_service
 
 
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
 
     _app.include_router(chat_router, prefix="", tags=["chat"])
     _app.include_router(ws_chat_router, tags=["websocket"])
+    _app.include_router(upload_router, tags=["upload"])
 
     @_app.get("/health")
     async def health_check():
