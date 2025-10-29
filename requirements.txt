@@ -1,6 +1,7 @@
 fastapi[all]
 uvicorn[standard]
 pytest
+pytest-asyncio
 httpx
 pylint
 black
