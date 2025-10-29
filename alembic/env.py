@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from app.db.base import Base
 from app.models.conversation import Conversation
 from app.models.message import Message
+from app.models.chat_file import ChatFile
 from app.core.settings import settings
 
 # this is the Alembic Config object
