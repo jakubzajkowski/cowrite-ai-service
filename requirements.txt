@@ -17,4 +17,8 @@ aiosqlite
 alembic
 prometheus-fastapi-instrumentator
 testcontainers[postgresql]
+testcontainers[localstack]
 PyJWT
+boto3
+aioboto3
+python-multipart
