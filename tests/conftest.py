@@ -57,8 +57,8 @@ def fastapi_app():
 
 @pytest.fixture()
 async def client(
-    fastapi_app,
-) -> AsyncGenerator[httpx.AsyncClient, None]:  # pylint: disable=redefined-outer-name
+    fastapi_app,  # pylint: disable=redefined-outer-name
+) -> AsyncGenerator[httpx.AsyncClient, None]:
     """Provide an async HTTP client bound to the FastAPI application."""
     transport = httpx.ASGITransport(app=fastapi_app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
