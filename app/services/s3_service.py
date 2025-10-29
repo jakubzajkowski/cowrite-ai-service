@@ -11,7 +11,6 @@ class S3Client:
 
     def __init__(self):
         """Initialize the S3 client with settings."""
-
         self.client = boto3.client(
             "s3",
             endpoint_url=settings.s3_endpoint_url,
@@ -22,7 +21,6 @@ class S3Client:
 
     def create_bucket_if_not_exists(self):
         """Create the S3 bucket if it does not already exist."""
-
         buckets = [b["Name"] for b in self.client.list_buckets()["Buckets"]]
         if settings.aws_s3_bucket not in buckets:
             self.client.create_bucket(Bucket=settings.aws_s3_bucket)
@@ -33,18 +31,7 @@ class S3Client:
         key: str,
         content_type: str = "application/octet-stream",
     ) -> str:
-        """
-        Upload any object (bytes or BytesIO) to S3.
-
-        Args:
-            obj: bytes or BytesIO
-            key: object key in S3
-            bucket: S3 bucket name
-            content_type: MIME type
-
-        Returns:
-            str: S3 path/url
-        """
+        """Upload any object (bytes or BytesIO) to S3 and return the S3 path."""
         if isinstance(obj, bytes):
             obj = io.BytesIO(obj)
 
@@ -54,22 +41,10 @@ class S3Client:
             Key=key,
             ExtraArgs={"ContentType": content_type},
         )
-
         return f"s3://{settings.aws_s3_bucket}/{key}"
 
     def get_object_content_as_text(self, key: str) -> str:
-        """
-        Get the content of an S3 object as UTF-8 text.
-
-        Args:
-            key: object key in S3
-
-        Returns:
-            str: object content as text
-        """
+        """Get the content of an S3 object as UTF-8 text."""
         response = self.client.get_object(Bucket=settings.aws_s3_bucket, Key=key)
         content = response["Body"].read()
         return content.decode("utf-8")
-
-
-s3_service = S3Client()

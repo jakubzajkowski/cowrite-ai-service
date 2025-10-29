@@ -1,80 +1,75 @@
 """
-Functional ChatService using ConversationRepository.
-Handles conversation creation and user verification.
+Chat service module handling conversations and messages.
 """
 
+from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.conversation_repository import ConversationRepository
-from app.services.auth_service import verify_user
 from app.repositories.message_repository import MessageRepository
+from app.services.auth_service import verify_user
 
 
-# -------------------------
-# Conversation functions
-# -------------------------
-async def create_conversation(
-    db: AsyncSession, user_token: str, title: str | None = None
-):
+class ChatService:
     """
-    Verify user and create a new conversation.
+    Class-based ChatService handling conversations and messages.
     """
-    print("Creating conversation for user token:", user_token)
-    user = await verify_user(user_token)
-    if not user:
-        raise ValueError("Invalid user token")
 
-    repo = ConversationRepository(db)
-    conversation = await repo.create_conversation(user_id=user["id"], title=title)
-    return conversation
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.conversation_repo = ConversationRepository(db)
+        self.message_repo = MessageRepository(db)
 
+    async def create_conversation(self, user_token: str, title: Optional[str] = None):
+        """
+        Verify user and create a new conversation.
+        """
+        print("Creating conversation for user token:", user_token)
+        user = await verify_user(user_token)
+        if not user:
+            raise ValueError("Invalid user token")
 
-async def get_conversations_by_user(db: AsyncSession, user_token: str):
-    """
-    Get all conversations for the verified user.
-    """
-    user = await verify_user(user_token)
-    if not user:
-        raise ValueError("Invalid user token")
+        conversation = await self.conversation_repo.create_conversation(
+            user_id=user["id"], title=title
+        )
+        return conversation
 
-    repo = ConversationRepository(db)
-    conversations = await repo.get_conversations_by_user(user_id=user["id"])
-    return conversations
+    async def get_conversations_by_user(self, user_token: str):
+        """
+        Get all conversations for the verified user.
+        """
+        user = await verify_user(user_token)
+        if not user:
+            raise ValueError("Invalid user token")
 
+        conversations = await self.conversation_repo.get_conversations_by_user(
+            user_id=user["id"]
+        )
+        return conversations
 
-# -------------------------
-# Message functions
-# -------------------------
-async def create_message(
-    db: AsyncSession, conversation_id: int, prompt: str, user_id: int
-):
-    """
-    Verify user and create a new message in a conversation.
-    """
-    repo = MessageRepository(db)
-    message = await repo.create_message(
-        conversation_id=conversation_id, user_id=user_id, prompt=prompt
-    )
-    return message
+    async def create_message(self, conversation_id: int, prompt: str, user_id: int):
+        """
+        Create a new message in a conversation.
+        """
+        message = await self.message_repo.create_message(
+            conversation_id=conversation_id, user_id=user_id, prompt=prompt
+        )
+        return message
 
+    async def update_message_response(
+        self, message_id: int, response: str, status: str = "completed"
+    ):
+        """
+        Update the response and status of a message.
+        """
+        message = await self.message_repo.update_message_response(
+            message_id=message_id, response=response, status=status
+        )
+        return message
 
-async def update_message_response(
-    db: AsyncSession, message_id: int, response: str, status: str = "completed"
-):
-    """
-    Update the response and status of a message.
-    """
-    repo = MessageRepository(db)
-    message = await repo.update_message_response(
-        message_id=message_id, response=response, status=status
-    )
-    return message
-
-
-async def get_messages_by_conversation(db: AsyncSession, conversation_id: int):
-    """
-    Get all messages for a given conversation.
-    """
-    repo = MessageRepository(db)
-    messages = await repo.get_messages_by_conversation(conversation_id)
-    return messages
+    async def get_messages_by_conversation(self, conversation_id: int) -> List:
+        """
+        Get all messages for a given conversation.
+        """
+        messages = await self.message_repo.get_messages_by_conversation(conversation_id)
+        return messages

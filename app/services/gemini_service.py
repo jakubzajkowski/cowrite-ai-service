@@ -52,6 +52,3 @@ class GeminiClient:
         """
         response = await asyncio.to_thread(self.generate_text, prompt, model)
         return response.text
-
-
-gemini_service = GeminiClient()

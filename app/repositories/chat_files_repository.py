@@ -17,6 +17,7 @@ class ChatFileRepository:
         filename: str,
         file_type: str,
         size: int,
+        key: str,
         storage_path: str,
     ) -> ChatFile:
         chat_file = ChatFile(
@@ -26,6 +27,7 @@ class ChatFileRepository:
             file_type=file_type,
             size=size,
             storage_path=storage_path,
+            key=key,
         )
         self.session.add(chat_file)
         await self.session.commit()

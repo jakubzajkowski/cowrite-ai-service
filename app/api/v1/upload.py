@@ -3,9 +3,20 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
-from app.services.upload_service import upload_file_and_save_metadata
+from app.services.s3_service import S3Client
+from app.services.upload_service import UploadService
 
 router = APIRouter()
+
+
+def get_s3_client() -> S3Client:
+    """Factory for S3 client."""
+    return S3Client()
+
+
+def get_upload_service(s3_client: S3Client = Depends(get_s3_client)) -> UploadService:
+    """Factory for UploadService."""
+    return UploadService(s3_client)
 
 
 @router.post("/conversations/{conversation_id}/upload")
@@ -14,6 +25,7 @@ async def upload_file(
     file: UploadFile = File(...),
     user_id: int = 1,
     session: AsyncSession = Depends(get_db),
+    upload_service: UploadService = Depends(get_upload_service),
 ):
     """
     Upload a file to S3 and save metadata in the database.
@@ -21,7 +33,7 @@ async def upload_file(
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
-    chat_file = await upload_file_and_save_metadata(
+    chat_file = await upload_service.upload_file_and_save_metadata(
         session=session, file=file, conversation_id=conversation_id, user_id=user_id
     )
 
