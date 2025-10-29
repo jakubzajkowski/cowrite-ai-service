@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from app.core.settings import settings
 
-# Configure SSL for Azure PostgreSQL if needed
+
 connect_args = {}
 if "azure.com" in settings.database_url:
     ssl_context = ssl.create_default_context()

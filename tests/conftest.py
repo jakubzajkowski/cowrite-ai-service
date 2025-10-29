@@ -1,73 +1,65 @@
-# pylint: disable=wrong-import-position, redefined-outer-name, unused-argument
-"""Configurations for pytest with FastAPI + async SQLAlchemy + Testcontainers."""
+"""Test fixtures: provide a FastAPI application backed by a Testcontainers Postgres
+and an async HTTP client for tests.
+
+Fixtures are intentionally minimal to keep tests fast and readable.
+"""
+
+from __future__ import annotations
 
 import asyncio
-import sys
-import os
-import pytest
-from testcontainers.postgres import PostgresContainer
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
+from typing import AsyncGenerator
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import httpx
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+from testcontainers.postgres import PostgresContainer
 
 from app.main import create_app
 from app.db.base import Base
-from app.db.database import get_db
+from app.db.database import get_db as app_get_db
 
 
 @pytest.fixture(scope="session")
-def event_loop():
-    """Let pytest use an event loop for async tests."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+def fastapi_app():
+    """Create a FastAPI app configured to use a temporary Postgres database.
 
+    The fixture starts a Postgres container, creates tables synchronously,
+    sets up an async session factory, and overrides the app's `get_db` dependency.
+    """
+    with PostgresContainer("postgres:16-alpine") as pg:
+        sync_url = pg.get_connection_url()
+        async_url = sync_url.replace("+psycopg2", "+asyncpg")
 
-@pytest.fixture(scope="session")
-def postgres_container():
-    """Runs a Postgres container for the duration of the test session."""
-    with PostgresContainer("postgres:15") as postgres:
-        yield postgres
+        sync_engine = create_engine(sync_url)
+        Base.metadata.create_all(bind=sync_engine)
 
+        async_engine = create_async_engine(async_url, echo=False)
+        async_session_factory = sessionmaker(
+            async_engine, class_=AsyncSession, expire_on_commit=False
+        )
 
-@pytest.fixture(scope="session")
-async def async_engine(postgres_container):
-    """Creates async engine for the test database."""
-    db_url = postgres_container.get_connection_url().replace(
-        "postgresql://", "postgresql+asyncpg://"
-    )
-    engine = create_async_engine(db_url, echo=False, future=True)
+        async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+            async with async_session_factory() as session:
+                yield session
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        application = create_app()
+        application.dependency_overrides[app_get_db] = override_get_db
 
-    yield engine
+        yield application
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-    await engine.dispose()
+        application.dependency_overrides.pop(app_get_db, None)
+        Base.metadata.drop_all(bind=sync_engine)
+        sync_engine.dispose()
+        asyncio.run(async_engine.dispose())
 
 
 @pytest.fixture()
-async def async_db_session(async_engine):
-    """Provides a new database session for a test."""
-    async_session_maker = sessionmaker(
-        async_engine, class_=AsyncSession, expire_on_commit=False
-    )
-    async with async_session_maker() as session:
-        yield session
-
-
-@pytest.fixture()
-def client(async_db_session):
-    """Provides a TestClient with overridden database dependency."""
-    app = create_app()
-
-    def override_get_db():
-        yield async_db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    return TestClient(app)
+async def client(
+    fastapi_app,
+) -> AsyncGenerator[httpx.AsyncClient, None]:  # pylint: disable=redefined-outer-name
+    """Provide an async HTTP client bound to the FastAPI application."""
+    transport = httpx.ASGITransport(app=fastapi_app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+        yield c

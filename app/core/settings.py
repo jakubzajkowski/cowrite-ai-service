@@ -1,6 +1,6 @@
 """Core settings for the application."""
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -12,11 +12,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/app_db"
     jwt_secret_key: str = "your_jwt_secret_key_here"
 
-    class Config:
-        """Pydantic configuration."""
-
-        # pylint: disable=too-few-public-methods
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 settings = Settings()

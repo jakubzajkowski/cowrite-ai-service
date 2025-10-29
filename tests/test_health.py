@@ -1,8 +1,11 @@
-"""Tests for the FastAPI application root endpoints."""
+"""Basic health endpoint tests."""
+
+import pytest
 
 
-def test_health_check(client):
-    """Health endpoint should return HTTP 200 and status payload."""
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+@pytest.mark.asyncio
+async def test_health_ok(client):
+    """GET /health should return status OK."""
+    resp = await client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}
