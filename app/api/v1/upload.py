@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Request, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
-from app.services.s3_service import S3Client
-from app.services.upload_service import UploadService
+from app.services.files.s3_service import S3Client
+from app.services.files.upload_service import UploadService
 
 router = APIRouter()
 

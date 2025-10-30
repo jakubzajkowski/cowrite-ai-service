@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.services.chat_service import ChatService
+from app.services.chat.chat_service import ChatService
 from app.schemas.conversation_request import ConversationRequest
 from app.schemas.conversation_dto import ConversationDTO
 

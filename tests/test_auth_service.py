@@ -6,7 +6,7 @@ import jwt
 import pytest
 
 from app.core.settings import settings
-from app.services.auth_service import verify_user
+from app.services.auth.auth_service import verify_user
 
 
 @pytest.mark.asyncio

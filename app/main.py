@@ -13,7 +13,7 @@ from app.api.v1.ws_chat import router as ws_chat_router
 from app.api.v1.upload import router as upload_router
 
 from app.middleware.auth_middleware import AuthMiddleware
-from app.services.s3_service import S3Client
+from app.services.files.s3_service import S3Client
 
 s3_service = S3Client()
 

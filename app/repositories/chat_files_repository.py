@@ -46,6 +46,21 @@ class ChatFileRepository:
         )
         return result.scalars().all()
 
+    async def list_user_files(
+        self, conversation_id: int, max_files: int = 3
+    ) -> List[ChatFile]:
+        stmt = (
+            select(ChatFile)
+            .where(
+                ChatFile.conversation_id == conversation_id,
+                ChatFile.user_id.isnot(None),
+            )
+            .order_by(ChatFile.created_at.asc())
+            .limit(max_files)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def delete(self, file_id: str) -> bool:
         result = await self.session.execute(
             delete(ChatFile).where(ChatFile.id == file_id).returning(ChatFile.id)

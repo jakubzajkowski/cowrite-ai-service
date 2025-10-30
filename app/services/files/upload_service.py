@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.chat_files_repository import ChatFileRepository
-from app.services.s3_service import S3Client
+from app.services.files.s3_service import S3Client
 
 
 class UploadService:

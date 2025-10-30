@@ -8,22 +8,36 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.services.chat_service import ChatService
-from app.services.gemini_service import GeminiClient
-from app.services.auth_service import verify_user
+from app.services.chat.chat_service import ChatService
+from app.services.ai.file_context_service import FileContextService
+from app.services.auth.auth_service import verify_user
 from app.core.settings import settings
+from app.services.files.s3_service import S3Client
+from app.services.files.text_extraction_service import TextExtractionService
+from app.services.ai.gemini_text_service import GeminiTextService
 
 router = APIRouter()
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
-    """Provide an instance of ChatService with a DB session."""
+    """Provide ChatService."""
     return ChatService(db)
 
 
-def get_gemini_service() -> GeminiClient:
-    """Provide an instance of GeminiClient."""
-    return GeminiClient()
+async def get_file_context_service(
+    db: AsyncSession = Depends(get_db),
+) -> FileContextService:
+    """Provide FileContextService."""
+    text_extractor = TextExtractionService()
+    s3_client = S3Client()
+    return FileContextService(text_extractor=text_extractor, s3_client=s3_client, db=db)
+
+
+async def get_gemini_text_service(
+    file_context_service: FileContextService = Depends(get_file_context_service),
+) -> GeminiTextService:
+    """Provide GeminiTextService with dependencies."""
+    return GeminiTextService(file_context_service=file_context_service)
 
 
 @router.websocket("/ws/chat/{conversation_id}")
@@ -31,7 +45,7 @@ async def websocket_chat(
     websocket: WebSocket,
     conversation_id: int,
     chat_service: ChatService = Depends(get_chat_service),
-    gemini_service: GeminiClient = Depends(get_gemini_service),
+    gemini_text_service: GeminiTextService = Depends(get_gemini_text_service),
 ):
     """WebSocket handler for chat messages in a given conversation."""
     await websocket.accept()
@@ -62,15 +76,15 @@ async def websocket_chat(
                 user_id=user["id"],
             )
 
-            response = await gemini_service.generate_text_async(prompt=prompt)
+            response = await gemini_text_service.generate(conversation_id, prompt)
 
             await chat_service.update_message_response(
                 message_id=message.id,
-                response=response,
+                response=response.text,
                 status="completed",
             )
 
-            await websocket.send_text(response)
+            await websocket.send_text(response.text)
 
     except WebSocketDisconnect:
         print(f"User {user['id']} disconnected")
