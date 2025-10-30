@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.message_repository import MessageRepository
-from app.services.auth_service import verify_user
 
 
 class ChatService:
@@ -20,30 +19,21 @@ class ChatService:
         self.conversation_repo = ConversationRepository(db)
         self.message_repo = MessageRepository(db)
 
-    async def create_conversation(self, user_token: str, title: Optional[str] = None):
+    async def create_conversation(self, user_id: int, title: Optional[str] = None):
         """
         Verify user and create a new conversation.
         """
-        print("Creating conversation for user token:", user_token)
-        user = await verify_user(user_token)
-        if not user:
-            raise ValueError("Invalid user token")
-
         conversation = await self.conversation_repo.create_conversation(
-            user_id=user["id"], title=title
+            user_id=user_id, title=title
         )
         return conversation
 
-    async def get_conversations_by_user(self, user_token: str):
+    async def get_conversations_by_user(self, user_id: int) -> List:
         """
         Get all conversations for the verified user.
         """
-        user = await verify_user(user_token)
-        if not user:
-            raise ValueError("Invalid user token")
-
         conversations = await self.conversation_repo.get_conversations_by_user(
-            user_id=user["id"]
+            user_id=user_id
         )
         return conversations
 

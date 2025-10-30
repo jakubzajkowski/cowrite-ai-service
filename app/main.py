@@ -12,6 +12,7 @@ from app.api.v1.chat import router as chat_router
 from app.api.v1.ws_chat import router as ws_chat_router
 from app.api.v1.upload import router as upload_router
 
+from app.middleware.auth_middleware import AuthMiddleware
 from app.services.s3_service import S3Client
 
 s3_service = S3Client()
@@ -41,6 +42,8 @@ def create_app() -> FastAPI:
     )
 
     Instrumentator().instrument(_app).expose(_app)
+
+    _app.add_middleware(AuthMiddleware)
 
     _app.include_router(chat_router, prefix="", tags=["chat"])
     _app.include_router(ws_chat_router, tags=["websocket"])

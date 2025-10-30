@@ -22,3 +22,5 @@ PyJWT
 boto3
 aioboto3
 python-multipart
+pypdf 
+python-docx
