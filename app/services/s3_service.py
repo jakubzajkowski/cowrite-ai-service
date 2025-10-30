@@ -43,8 +43,11 @@ class S3Client:
         )
         return f"s3://{settings.aws_s3_bucket}/{key}"
 
-    def get_object_content_as_text(self, key: str) -> str:
-        """Get the content of an S3 object as UTF-8 text."""
+    def download_file_as_bytes(self, key: str) -> bytes:
+        """
+        Download an S3 object as bytes and return (content, filename).
+        """
         response = self.client.get_object(Bucket=settings.aws_s3_bucket, Key=key)
         content = response["Body"].read()
-        return content.decode("utf-8")
+
+        return content

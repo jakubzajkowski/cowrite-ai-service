@@ -14,7 +14,9 @@ def get_s3_client() -> S3Client:
     return S3Client()
 
 
-def get_upload_service(s3_client: S3Client = Depends(get_s3_client)) -> UploadService:
+def get_upload_service(
+    s3_client: S3Client = Depends(get_s3_client),
+) -> UploadService:
     """Factory for UploadService."""
     return UploadService(s3_client)
 
