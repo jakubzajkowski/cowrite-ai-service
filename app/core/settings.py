@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     aws_secret_access_key: str = "test"
     aws_region: str = "us-east-1"
     aws_s3_bucket: str = "chat-files-bucket"
+    chroma_host: str = "localhost"
+    chroma_port: int = 8001
 
     model_config = SettingsConfigDict(env_file=".env")
 

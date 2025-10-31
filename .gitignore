@@ -84,3 +84,4 @@ dmypy.json
 
 # Optional: node_modules if using frontend with FastAPI
 node_modules/
+chromadb_data/

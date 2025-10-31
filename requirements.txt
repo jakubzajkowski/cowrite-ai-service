@@ -24,3 +24,5 @@ aioboto3
 python-multipart
 pypdf 
 python-docx
+sentence-transformers
+chromadb
