@@ -1,20 +1,20 @@
-"""Test fixtures: provide a FastAPI application backed by a Testcontainers Postgres
-and an async HTTP client for tests.
+"""Test fixtures: FastAPI app with Testcontainers for Postgres and ChromaDB.
 
-Fixtures are intentionally minimal to keep tests fast and readable.
+Provides a configured FastAPI application with temporary databases
+and an async HTTP client for integration tests.
 """
 
-from __future__ import annotations
-
 import asyncio
+from contextlib import ExitStack
 from typing import AsyncGenerator
-
 import httpx
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
+from testcontainers.chroma import ChromaContainer
+import chromadb
 
 from app.main import create_app
 from app.db.base import Base
@@ -23,12 +23,17 @@ from app.db.database import get_db as app_get_db
 
 @pytest.fixture(scope="session")
 def fastapi_app():
-    """Create a FastAPI app configured to use a temporary Postgres database.
+    """FastAPI app z Postgres i Chroma testcontainers."""
+    with ExitStack() as stack:
+        chroma = stack.enter_context(ChromaContainer())
+        chroma_host = chroma.get_container_host_ip()
+        chroma_port = int(chroma.get_exposed_port(8000))
 
-    The fixture starts a Postgres container, creates tables synchronously,
-    sets up an async session factory, and overrides the app's `get_db` dependency.
-    """
-    with PostgresContainer("postgres:16-alpine") as pg:
+        chroma_client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+        collection = chroma_client.get_or_create_collection("test")
+        print("Chroma collection:", collection.name)
+
+        pg = stack.enter_context(PostgresContainer("postgres:16-alpine"))
         sync_url = pg.get_connection_url()
         async_url = sync_url.replace("+psycopg2", "+asyncpg")
 

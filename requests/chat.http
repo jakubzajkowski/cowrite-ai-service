@@ -1,7 +1,7 @@
 ### Create a new conversation
 POST http://localhost:8000/conversations
 Content-Type: application/json
-Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFpbFwiOlwidGVzdHVzZXIxdzJcIixcInVzZXJuYW1lXCI6XCJ0ZXN0MXcyQGV4YW1wbGUuY29tXCJ9IiwiaWF0IjoxNzYyMTY2Mjk5LCJleHAiOjE3NjIxNjk4OTl9.OKuQGiiRyKpXHLJX4NOcZHiRrp9QKCmIuouALfJFuhY; Max-Age=3600; Expires=Mon, 03 Nov 2025 11:38:19 GMT; Path=/; HttpOnly
+Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFpbFwiOlwidGVzdHVzZXIxdzJcIixcInVzZXJuYW1lXCI6XCJ0ZXN0MXcyQGV4YW1wbGUuY29tXCJ9IiwiaWF0IjoxNzYyMTcyNTc3LCJleHAiOjE3NjIxNzYxNzd9.HfjFAXDAZ8gFQExc45eSL4GAGY2bqJM359rUwq-uITo; Max-Age=3600; Expires=Mon, 03 Nov 2025 13:22:57 GMT; Path=/; HttpOnly
 
 {
   "title": "Chat with Neko"
@@ -10,4 +10,4 @@ Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFp
 ### Get all conversations for the user
 GET http://localhost:8000/conversations
 Content-Type: application/json
-Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFpbFwiOlwidGVzdHVzZXIxdzJcIixcInVzZXJuYW1lXCI6XCJ0ZXN0MXcyQGV4YW1wbGUuY29tXCJ9IiwiaWF0IjoxNzYyMTY2Mjk5LCJleHAiOjE3NjIxNjk4OTl9.OKuQGiiRyKpXHLJX4NOcZHiRrp9QKCmIuouALfJFuhY; Max-Age=3600; Expires=Mon, 03 Nov 2025 11:38:19 GMT; Path=/; HttpOnly
+Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFpbFwiOlwidGVzdHVzZXIxdzJcIixcInVzZXJuYW1lXCI6XCJ0ZXN0MXcyQGV4YW1wbGUuY29tXCJ9IiwiaWF0IjoxNzYyMTcyNTc3LCJleHAiOjE3NjIxNzYxNzd9.HfjFAXDAZ8gFQExc45eSL4GAGY2bqJM359rUwq-uITo; Max-Age=3600; Expires=Mon, 03 Nov 2025 13:22:57 GMT; Path=/; HttpOnly

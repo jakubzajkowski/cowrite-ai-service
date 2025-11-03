@@ -19,15 +19,31 @@ from app.services.ai.gemini_text_service import GeminiTextService
 
 router = APIRouter()
 
-# 🔁 Jednorazowa inicjalizacja ciężkich komponentów
-_chroma_client = ChromaClient()
-_s3_client = S3Client()
-_text_extractor = TextExtractionService()
-_embedding_service = EmbeddingService(
-    chroma_client=_chroma_client,
-    s3_client=_s3_client,
-    text_extractor_service=_text_extractor,
-)
+
+async def get_chroma_client() -> ChromaClient:
+    """Factory for Chroma client."""
+    return ChromaClient()
+
+
+async def get_s3_client() -> S3Client:
+    """Factory for S3 client."""
+    return S3Client()
+
+
+async def get_text_extraction_service() -> TextExtractionService:
+    """Factory for TextExtractionService."""
+    return TextExtractionService()
+
+
+async def get_embedding_service(
+    s3_client: S3Client = Depends(get_s3_client),
+    chroma_client: ChromaClient = Depends(get_chroma_client),
+    text_extraction_service: TextExtractionService = Depends(
+        get_text_extraction_service
+    ),
+) -> EmbeddingService:
+    """Factory for EmbeddingService."""
+    return EmbeddingService(chroma_client, s3_client, text_extraction_service)
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
@@ -39,7 +55,7 @@ async def get_file_context_service(
     db: AsyncSession = Depends(get_db),
 ) -> FileContextService:
     """Provide FileContextService using cached EmbeddingService."""
-    return FileContextService(embedding_service=_embedding_service, db=db)
+    return FileContextService(embedding_service=Depends(get_embedding_service), db=db)
 
 
 async def get_gemini_text_service(
