@@ -2,46 +2,67 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.files.s3_service import S3Client
+from app.services.ai.embedding_service import EmbeddingService
 from app.repositories.chat_files_repository import ChatFileRepository
-from app.services.files.text_extraction_service import TextExtractionService
 
 
 class FileContextService:
-    """Service to extract and compile context from user-uploaded files stored in S3."""
+    """Service to compile context from embeddings of files related to a conversation."""
 
     def __init__(
         self,
-        text_extractor: TextExtractionService,
-        s3_client: S3Client,
+        embedding_service: EmbeddingService,
         db: AsyncSession,
     ):
-        self.text_extractor = text_extractor
-        self.s3_client = s3_client
+        self.embedding_service = embedding_service
         self.db = db
         self.chat_file_repo = ChatFileRepository(db)
 
-    """Get compiled context from external files for a conversation."""
-
     async def get_external_file_context(
-        self, conversation_id: int, max_files: int = 3, max_tokens: int = 10000
+        self,
+        conversation_id: int,
+        user_id: int,
+        query_text: str,
+        max_files: int = 50,
+        max_tokens: int = 10000,
+        top_k: int = 10,
     ) -> str:
-
+        """
+        Retrieve relevant semantic context for a query based on embeddings
+        from all files in the given conversation.
+        """
         chat_files = await self.chat_file_repo.list_user_files(
             conversation_id, max_files
         )
 
+        if not chat_files:
+            return ""
+
         external_texts: list[str] = []
 
-        for f in chat_files:
-            content_bytes = self.s3_client.download_file_as_bytes(f.key)
-            extracted_text = await self.text_extractor.extract_text(
-                f.filename, content_bytes
-            )
-            if extracted_text:
-                external_texts.append(f"File {f.filename}:\n{extracted_text}")
+        print(f"Found {len(chat_files)} files for context retrieval.")
 
-        context = "\n---\n".join(external_texts)
+        for f in chat_files:
+            result = await self.embedding_service.query_user_file_context(
+                user_id=user_id,
+                file_id=str(f.id),
+                query_text=query_text,
+                n_results=top_k,
+            )
+
+            docs = result.get("documents", [[]])[0]
+
+            if not docs:
+                continue
+
+            text = f"📄 File: {f.filename}\n" + "\n---\n".join(docs)
+            external_texts.append(text)
+
+        if not external_texts:
+            return ""
+
+        context = "\n\n===========================\n\n".join(external_texts)
+
         if len(context) > max_tokens:
             context = context[:max_tokens]
 

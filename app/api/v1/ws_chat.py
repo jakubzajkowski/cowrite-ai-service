@@ -3,20 +3,31 @@ WebSocket endpoint for handling chat messages with Gemini AI using ChatService.
 """
 
 from http.cookies import SimpleCookie
-
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.services.chat.chat_service import ChatService
+from app.services.ai.embedding_service import EmbeddingService
+from app.services.files.s3_service import S3Client
 from app.services.ai.file_context_service import FileContextService
+from app.services.files.text_extraction_service import TextExtractionService
 from app.services.auth.auth_service import verify_user
 from app.core.settings import settings
-from app.services.files.s3_service import S3Client
-from app.services.files.text_extraction_service import TextExtractionService
+from app.services.ai.chroma_client import ChromaClient
 from app.services.ai.gemini_text_service import GeminiTextService
 
 router = APIRouter()
+
+# 🔁 Jednorazowa inicjalizacja ciężkich komponentów
+_chroma_client = ChromaClient()
+_s3_client = S3Client()
+_text_extractor = TextExtractionService()
+_embedding_service = EmbeddingService(
+    chroma_client=_chroma_client,
+    s3_client=_s3_client,
+    text_extractor_service=_text_extractor,
+)
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
@@ -27,10 +38,8 @@ async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
 async def get_file_context_service(
     db: AsyncSession = Depends(get_db),
 ) -> FileContextService:
-    """Provide FileContextService."""
-    text_extractor = TextExtractionService()
-    s3_client = S3Client()
-    return FileContextService(text_extractor=text_extractor, s3_client=s3_client, db=db)
+    """Provide FileContextService using cached EmbeddingService."""
+    return FileContextService(embedding_service=_embedding_service, db=db)
 
 
 async def get_gemini_text_service(
@@ -70,21 +79,28 @@ async def websocket_chat(
         while True:
             prompt = await websocket.receive_text()
 
+            # 🧠 Zapisz wiadomość użytkownika w DB
             message = await chat_service.create_message(
                 conversation_id=conversation_id,
                 prompt=prompt,
                 user_id=user["id"],
             )
 
-            response = await gemini_text_service.generate(conversation_id, prompt)
+            # 🤖 Wygeneruj odpowiedź z Gemini + kontekst z plików
+            response = await gemini_text_service.generate(
+                conversation_id=conversation_id,
+                user_id=user["id"],
+                user_prompt=prompt,
+            )
 
+            # 💾 Zaktualizuj wiadomość w DB z odpowiedzią AI
             await chat_service.update_message_response(
                 message_id=message.id,
-                response=response.text,
+                response=response,
                 status="completed",
             )
 
-            await websocket.send_text(response.text)
+            await websocket.send_text(response)
 
     except WebSocketDisconnect:
         print(f"User {user['id']} disconnected")

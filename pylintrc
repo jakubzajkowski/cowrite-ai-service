@@ -1,2 +1,4 @@
 [DESIGN]
 min-public-methods=1
+max-args=8
+max-positional-arguments=8

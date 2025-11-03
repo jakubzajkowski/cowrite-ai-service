@@ -35,7 +35,7 @@ class UploadService:
         key = f"{uuid4()}_{file.filename}"
         content = await file.read()
 
-        s3_path = self.s3_client.upload_object_to_s3(
+        s3_path = await self.s3_client.upload_object_to_s3(
             obj=content,
             key=key,
             content_type=file.content_type or "application/octet-stream",

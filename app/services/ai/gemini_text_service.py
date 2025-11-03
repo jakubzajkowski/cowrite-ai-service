@@ -1,9 +1,8 @@
 """Service to generate text using the Gemini API with context from external files."""
 
-import asyncio
 from app.services.ai.file_context_service import FileContextService
-from app.services.ai.gemini_service import GeminiClient
-from prompts.assistant_prompt_v1 import MARKDOWN_ASSISTANT_PROMPT_V1
+from app.services.ai.gemini_client import GeminiClient
+from prompts.assistant_prompt_v1 import MARKDOWN_ASSISTANT_PROMPT_V2
 from prompts.prompt_composer import PromptComposer
 
 
@@ -14,21 +13,30 @@ class GeminiTextService:
         self.file_context_service = file_context_service
         self.client = GeminiClient()
 
-    """Generate text using Gemini with context from external files."""
-
-    async def generate(self, conversation_id: int, user_prompt: str):
+    async def generate(self, conversation_id: int, user_id: int, user_prompt: str):
+        """
+        Generate text from Gemini API using user prompt and semantic context
+        from conversation files stored in ChromaDB.
+        """
         file_context = await self.file_context_service.get_external_file_context(
-            conversation_id
+            conversation_id=conversation_id,
+            user_id=user_id,
+            query_text=user_prompt,
+            max_files=3,
+            max_tokens=8000,
+            top_k=10,
         )
+
         full_prompt = PromptComposer.compose(
             user_prompt=user_prompt,
             file_context=file_context,
-            system_instruction=MARKDOWN_ASSISTANT_PROMPT_V1,
+            system_instruction=MARKDOWN_ASSISTANT_PROMPT_V2,
         )
 
         print("=== Sending to Gemini ===")
-        print(full_prompt[:1000])
+        print(full_prompt)
         print("==========================")
 
-        response = await asyncio.to_thread(self.client.generate, full_prompt)
+        response = await self.client.generate(full_prompt)
+
         return response
