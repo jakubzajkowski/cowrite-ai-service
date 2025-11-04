@@ -105,4 +105,4 @@ async def file_status(
     if not chat_file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    return {"file_id": chat_file.id, "status": chat_file.status}
+    return {"fileId": chat_file.id, "status": chat_file.status}
