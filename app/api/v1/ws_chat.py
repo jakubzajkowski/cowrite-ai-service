@@ -41,9 +41,10 @@ async def get_embedding_service(
     text_extraction_service: TextExtractionService = Depends(
         get_text_extraction_service
     ),
+    db: AsyncSession = Depends(get_db),
 ) -> EmbeddingService:
     """Factory for EmbeddingService."""
-    return EmbeddingService(chroma_client, s3_client, text_extraction_service)
+    return EmbeddingService(chroma_client, s3_client, text_extraction_service, db)
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
@@ -52,10 +53,11 @@ async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
 
 
 async def get_file_context_service(
+    embedding_service: EmbeddingService = Depends(get_embedding_service),
     db: AsyncSession = Depends(get_db),
 ) -> FileContextService:
-    """Provide FileContextService using cached EmbeddingService."""
-    return FileContextService(embedding_service=Depends(get_embedding_service), db=db)
+    """Provide FileContextService with an initialized EmbeddingService."""
+    return FileContextService(embedding_service=embedding_service, db=db)
 
 
 async def get_gemini_text_service(

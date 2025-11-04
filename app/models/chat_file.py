@@ -21,6 +21,7 @@ class ChatFile(Base):
     size = Column(Integer, nullable=False)
     storage_path = Column(String, nullable=False)
     key = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="in progress")
     created_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
 
     conversation = relationship("Conversation", back_populates="files")

@@ -70,3 +70,13 @@ class ChatFileRepository:
             await self.session.commit()
             return True
         return False
+
+    async def update_status(self, file_id: str, status: str) -> Optional[ChatFile]:
+        chat_file = await self.get_by_id(file_id)
+        if chat_file:
+            chat_file.status = status
+            self.session.add(chat_file)
+            await self.session.commit()
+            await self.session.refresh(chat_file)
+            return chat_file
+        return None

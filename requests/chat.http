@@ -1,7 +1,7 @@
 ### Create a new conversation
 POST http://localhost:8000/conversations
 Content-Type: application/json
-Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFpbFwiOlwidGVzdHVzZXIxdzJcIixcInVzZXJuYW1lXCI6XCJ0ZXN0MXcyQGV4YW1wbGUuY29tXCJ9IiwiaWF0IjoxNzYyMTcyNTc3LCJleHAiOjE3NjIxNzYxNzd9.HfjFAXDAZ8gFQExc45eSL4GAGY2bqJM359rUwq-uITo; Max-Age=3600; Expires=Mon, 03 Nov 2025 13:22:57 GMT; Path=/; HttpOnly
+Cookie: COWRITE_SESSION_ID=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjQsXCJlbWFpbFwiOlwidGVzdHVzZXIxdzJcIixcInVzZXJuYW1lXCI6XCJ0ZXN0MXcyQGV4YW1wbGUuY29tXCJ9IiwiaWF0IjoxNzYyMjUyNjY4LCJleHAiOjE3NjIyNTYyNjh9.sWdbDyhNi48AYJwdgIiMqPOjsyyGI3XZLXbpMqqx5wE; Max-Age=3600; Expires=Tue, 04 Nov 2025 11:37:48 GMT; Path=/; HttpOnly
 
 {
   "title": "Chat with Neko"

@@ -53,3 +53,23 @@ class UploadService:
         )
 
         return chat_file
+
+    async def get_file_status(
+        self,
+        session: AsyncSession,
+        file_id: str,
+    ):
+        """
+        Retrieve the status of a file by its ID.
+
+        Args:
+            session: Async SQLAlchemy session
+            file_id: ID of the file
+
+        Returns:
+            ChatFile: ChatFile record with the given ID
+        """
+        repo = ChatFileRepository(session)
+        chat_file = await repo.get_by_id(file_id)
+
+        return chat_file

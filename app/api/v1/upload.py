@@ -48,9 +48,10 @@ def get_embedding_service(
     text_extraction_service: TextExtractionService = Depends(
         get_text_extraction_service
     ),
+    db: AsyncSession = Depends(get_db),
 ) -> EmbeddingService:
     """Factory for EmbeddingService."""
-    return EmbeddingService(chroma_client, s3_client, text_extraction_service)
+    return EmbeddingService(chroma_client, s3_client, text_extraction_service, db)
 
 
 @router.post("/conversations/{conversation_id}/upload")
@@ -88,3 +89,20 @@ async def upload_file(
     )
 
     return chat_file
+
+
+@router.get("/conversations/upload/status/{file_id}")
+async def file_status(
+    file_id: str,
+    session: AsyncSession = Depends(get_db),
+    upload_service: UploadService = Depends(get_upload_service),
+):
+    """
+    Get the status of a file processing.
+    """
+    chat_file = await upload_service.get_file_status(session=session, file_id=file_id)
+
+    if not chat_file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return {"file_id": chat_file.id, "status": chat_file.status}

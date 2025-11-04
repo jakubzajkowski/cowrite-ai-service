@@ -3,9 +3,11 @@
 import re
 import asyncio
 from sentence_transformers import SentenceTransformer
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.ai.chroma_client import ChromaClient
 from app.services.files.s3_service import S3Client
 from app.services.files.text_extraction_service import TextExtractionService
+from app.repositories.chat_files_repository import ChatFileRepository
 
 
 class EmbeddingService:
@@ -16,11 +18,13 @@ class EmbeddingService:
         chroma_client: ChromaClient,
         s3_client: S3Client,
         text_extractor_service: TextExtractionService,
+        db: AsyncSession,
     ):
         self.chroma_client = chroma_client
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.s3_client = s3_client
         self.text_extractor = text_extractor_service
+        self.chat_file_repository = ChatFileRepository(db)
 
     def chunk_text(self, text: str) -> list[str]:
         """Split text into smaller chunks for embedding."""
@@ -69,6 +73,8 @@ class EmbeddingService:
         }
 
         await self.chroma_client.add(items)
+
+        await self.chat_file_repository.update_status(file_id, "completed")
 
         return {"status": "ok", "chunks": len(chunks), "file_id": file_id}
 
