@@ -2,7 +2,6 @@ fastapi[all]
 uvicorn[standard]
 pytest
 pytest-asyncio
-httpx
 pylint
 black
 python-dotenv
@@ -16,8 +15,6 @@ psycopg2-binary
 aiosqlite
 alembic
 prometheus-fastapi-instrumentator
-testcontainers[postgresql]
-testcontainers[localstack]
 PyJWT
 boto3
 aioboto3
@@ -26,7 +23,6 @@ pypdf
 python-docx
 sentence-transformers
 chromadb
-aioboto3
 langchain
 openai
 tiktoken

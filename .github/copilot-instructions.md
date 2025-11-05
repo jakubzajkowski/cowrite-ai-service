@@ -64,7 +64,7 @@ Keep code modular and organized by layers:
           """
   ```
 
-- Add short **inline comments** (`#`) for key logic steps inside complex methods.
+- Add short **inline comments** for key logic steps inside complex methods.
 - Keep line length under 100 characters.
 
 ---

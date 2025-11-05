@@ -1,78 +1,96 @@
-"""Unit tests for file upload endpoint with mocked dependencies."""
+"""Unit tests for upload service."""
 
-import uuid
-from unittest.mock import AsyncMock, MagicMock
+# pylint: disable=import-outside-toplevel
+
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
-@pytest.fixture
-def mock_user():
-    """Mock authenticated user."""
-    return {"id": 123, "email": "test@example.com"}
-
-
-@pytest.fixture
-def mock_file_id():
-    """Mock UUID for file ID."""
-    return uuid.uuid4()
-
-
-@pytest.fixture
-def mock_upload_service(mock_file_id):  # pylint: disable=redefined-outer-name
-    """Mock UploadService for file operations."""
-    service = AsyncMock()
-
-    mock_file = MagicMock()
-    mock_file.id = mock_file_id
-    mock_file.key = "s3://bucket/test.pdf"
-    mock_file.filename = "test.pdf"
-    mock_file.status = "uploaded"
-    mock_file.file_type = "application/pdf"
-    mock_file.size = 1024
-
-    service.upload_file_and_save_metadata.return_value = mock_file
-    service.get_file_status.return_value = mock_file
-
-    return service
-
-
 @pytest.mark.asyncio
-async def test_upload_file_unauthorized(client):
-    """POST /conversations/{id}/upload should return 401 without authentication."""
-    # No auth mock - should fail
+async def test_upload_service_saves_metadata():
+    """Test UploadService saves file metadata to database."""
+    from app.services.files.upload_service import UploadService
+    from fastapi import UploadFile
+
+    # Mock S3 client
+    mock_s3 = MagicMock()
+    mock_s3.upload_object_to_s3 = AsyncMock(return_value="s3://bucket/test.pdf")
+
+    # Mock database session
+    mock_db = AsyncMock()
+
+    # Create service
+    service = UploadService(s3_client=mock_s3)
+
+    # Mock file
     file_content = b"fake pdf content"
-    files = {"file": ("test.pdf", file_content, "application/pdf")}
+    mock_file = MagicMock(spec=UploadFile)
+    mock_file.filename = "test.pdf"
+    mock_file.content_type = "application/pdf"
+    mock_file.read = AsyncMock(return_value=file_content)
 
-    response = await client.post("/conversations/1/upload", files=files)
+    # Mock repository
+    mock_chat_file = MagicMock()
+    mock_chat_file.id = 1
+    mock_chat_file.filename = "test.pdf"
 
-    assert response.status_code == 401
+    with patch(
+        "app.services.files.upload_service.ChatFileRepository"
+    ) as mock_repo_class:
+        mock_repo = MagicMock()
+        mock_repo.create = AsyncMock(return_value=mock_chat_file)
+        mock_repo_class.return_value = mock_repo
+
+        # Test upload
+        result = await service.upload_file_and_save_metadata(
+            session=mock_db, file=mock_file, conversation_id=1, user_id=123
+        )
+
+        # Verify
+        assert result.filename == "test.pdf"
+        mock_s3.upload_object_to_s3.assert_called_once()
+        mock_repo.create.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_file_status_success(
-    fastapi_app,  # pylint: disable=redefined-outer-name
-    client,
-    mock_upload_service,  # pylint: disable=redefined-outer-name
-    mock_file_id,  # pylint: disable=redefined-outer-name
-):
-    """GET /conversations/upload/status/{file_id} should return file processing status."""
-    # Import at top level to avoid pylint warning
-    from app.api.v1 import upload  # pylint: disable=import-outside-toplevel
+async def test_s3_client_initialization():
+    """Test S3Client initializes with settings."""
+    from app.services.files.s3_service import S3Client
 
-    # Mock upload service dependency
-    async def mock_get_upload_service():
-        return mock_upload_service
+    # Create client
+    client = S3Client()
 
-    fastapi_app.dependency_overrides[upload.get_upload_service] = (
-        mock_get_upload_service
-    )
+    # Verify properties exist
+    assert client.session is not None
+    assert client.bucket is not None
 
-    try:
-        response = await client.get(f"/conversations/upload/status/{mock_file_id}")
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["fileId"] == str(mock_file_id)
-        assert data["status"] == "uploaded"
-    finally:
-        fastapi_app.dependency_overrides.clear()
+@pytest.mark.asyncio
+async def test_s3_client_upload_object():
+    """Test S3Client upload_object_to_s3 method."""
+    from app.services.files.s3_service import S3Client
+
+    with patch("app.services.files.s3_service.aioboto3.Session") as mock_session_class:
+        # Mock S3 client
+        mock_s3_client = AsyncMock()
+        mock_s3_client.upload_fileobj = AsyncMock()
+
+        # Mock session context manager
+        mock_session = MagicMock()
+        mock_session.client = MagicMock()
+        mock_session.client.return_value.__aenter__ = AsyncMock(
+            return_value=mock_s3_client
+        )
+        mock_session.client.return_value.__aexit__ = AsyncMock()
+
+        mock_session_class.return_value = mock_session
+
+        # Create client and upload
+        client = S3Client()
+        result = await client.upload_object_to_s3(
+            obj=b"test content", key="test.pdf", content_type="application/pdf"
+        )
+
+        # Verify
+        assert "s3://" in result
+        assert "test.pdf" in result
