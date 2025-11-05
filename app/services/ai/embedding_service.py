@@ -20,9 +20,10 @@ class EmbeddingService:
         s3_client: S3Client,
         text_extractor_service: TextExtractionService,
         db: AsyncSession,
+        model: SentenceTransformer,
     ):
         self.chroma_client = chroma_client
-        self.model = SentenceTransformer("intfloat/multilingual-e5-base")
+        self.model = model
         self.s3_client = s3_client
         self.text_extractor = text_extractor_service
         self.chat_file_repository = ChatFileRepository(db)

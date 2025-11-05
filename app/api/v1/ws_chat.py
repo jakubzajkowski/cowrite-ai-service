@@ -9,46 +9,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
 from app.services.chat.chat_service import ChatService
 from app.services.ai.embedding_service import EmbeddingService
-from app.services.files.s3_service import S3Client
 from app.services.ai.file_context_service import FileContextService
-from app.services.files.text_extraction_service import TextExtractionService
 from app.services.auth.auth_service import verify_user
 from app.core.settings import settings
-from app.services.ai.chroma_client import ChromaClient
 from app.services.ai.gemini_text_service import GeminiTextService
 
 router = APIRouter()
 
 
-async def get_chroma_client() -> ChromaClient:
-    """Factory for Chroma client."""
-    return ChromaClient()
-
-
-async def get_s3_client() -> S3Client:
-    """Factory for S3 client."""
-    return S3Client()
-
-
-async def get_text_extraction_service() -> TextExtractionService:
-    """Factory for TextExtractionService."""
-    return TextExtractionService()
-
-
 async def get_embedding_service(
-    s3_client: S3Client = Depends(get_s3_client),
-    chroma_client: ChromaClient = Depends(get_chroma_client),
-    text_extraction_service: TextExtractionService = Depends(
-        get_text_extraction_service
-    ),
-    db: AsyncSession = Depends(get_db),
+    ws: WebSocket, db: AsyncSession = Depends(get_db)
 ) -> EmbeddingService:
-    """Factory for EmbeddingService."""
-    return EmbeddingService(chroma_client, s3_client, text_extraction_service, db)
+    """Return EmbeddingService using preloaded objects from app.state."""
+    return EmbeddingService(
+        chroma_client=ws.app.state.chroma_client,
+        s3_client=ws.app.state.s3_client,
+        text_extractor_service=ws.app.state.text_extractor_service,
+        db=db,
+        model=ws.app.state.embedding_model,
+    )
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
-    """Provide ChatService."""
+    """Return ChatService using preloaded objects from app.state."""
     return ChatService(db)
 
 
@@ -56,14 +39,14 @@ async def get_file_context_service(
     embedding_service: EmbeddingService = Depends(get_embedding_service),
     db: AsyncSession = Depends(get_db),
 ) -> FileContextService:
-    """Provide FileContextService with an initialized EmbeddingService."""
+    """Return FileContextService using EmbeddingService and DB session."""
     return FileContextService(embedding_service=embedding_service, db=db)
 
 
 async def get_gemini_text_service(
     file_context_service: FileContextService = Depends(get_file_context_service),
 ) -> GeminiTextService:
-    """Provide GeminiTextService with dependencies."""
+    """Return GeminiTextService using FileContextService."""
     return GeminiTextService(file_context_service=file_context_service)
 
 

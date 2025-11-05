@@ -1,4 +1,6 @@
-"""API endpoint for uploading files to S3 and saving metadata in the database."""
+"""
+API endpoint for uploading files to S3 and saving metadata in the database.
+"""
 
 from fastapi import (
     APIRouter,
@@ -10,8 +12,8 @@ from fastapi import (
     BackgroundTasks,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.database import get_db
-from app.services.ai.chroma_client import ChromaClient
 from app.services.ai.embedding_service import EmbeddingService
 from app.services.files.s3_service import S3Client
 from app.services.files.text_extraction_service import TextExtractionService
@@ -20,38 +22,32 @@ from app.services.files.upload_service import UploadService
 router = APIRouter()
 
 
-def get_text_extraction_service() -> TextExtractionService:
-    """Factory for TextExtractionService."""
-    return TextExtractionService()
+def get_s3_client(request: Request) -> S3Client:
+    """Return preloaded S3Client from app.state."""
+    return request.app.state.s3_client
 
 
-def get_chroma_client() -> ChromaClient:
-    """Factory for Chroma client."""
-    return ChromaClient()
-
-
-def get_s3_client() -> S3Client:
-    """Factory for S3 client."""
-    return S3Client()
-
-
-def get_upload_service(
-    s3_client: S3Client = Depends(get_s3_client),
-) -> UploadService:
-    """Factory for UploadService."""
-    return UploadService(s3_client)
+def get_text_extraction_service(request: Request) -> TextExtractionService:
+    """Return preloaded TextExtractionService from app.state."""
+    return request.app.state.text_extractor_service
 
 
 def get_embedding_service(
-    s3_client: S3Client = Depends(get_s3_client),
-    chroma_client: ChromaClient = Depends(get_chroma_client),
-    text_extraction_service: TextExtractionService = Depends(
-        get_text_extraction_service
-    ),
-    db: AsyncSession = Depends(get_db),
+    request: Request, db: AsyncSession = Depends(get_db)
 ) -> EmbeddingService:
-    """Factory for EmbeddingService."""
-    return EmbeddingService(chroma_client, s3_client, text_extraction_service, db)
+    """Return EmbeddingService using preloaded objects from app.state."""
+    return EmbeddingService(
+        chroma_client=request.app.state.chroma_client,
+        s3_client=request.app.state.s3_client,
+        text_extractor_service=request.app.state.text_extractor_service,
+        db=db,
+        model=request.app.state.embedding_model,
+    )
+
+
+def get_upload_service(request: Request) -> UploadService:
+    """Return UploadService using preloaded S3 client from app.state."""
+    return UploadService(request.app.state.s3_client)
 
 
 @router.post("/conversations/{conversation_id}/upload")
@@ -68,7 +64,7 @@ async def upload_file(
     Upload a file to S3 and save metadata in the database.
     Then trigger async embedding creation in the background.
     """
-    user = request.state.user if request.state.user else None
+    user = getattr(request.state, "user", None)
 
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")

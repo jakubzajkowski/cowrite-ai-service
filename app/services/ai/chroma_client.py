@@ -12,13 +12,15 @@ class ChromaClient:
     def __init__(
         self,
         collection_name: str = "document",
-        embedding_model: str = "intfloat/multilingual-e5-base",
+        model: SentenceTransformer = SentenceTransformer(
+            "intfloat/multilingual-e5-base"
+        ),
     ):
         self.host = settings.chroma_host
         self.port = settings.chroma_port
         self.collection_name = collection_name
 
-        self.model = SentenceTransformer(embedding_model)
+        self.model = model
         self.client = HttpClient(host=self.host, port=self.port)
         self.collection = self._get_or_create_collection()
 
