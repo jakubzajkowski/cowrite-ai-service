@@ -23,9 +23,4 @@ pypdf
 python-docx
 sentence-transformers
 chromadb
-langchain
-openai
-tiktoken
-langchain-core
-langchain-community
 langchain-text-splitters
