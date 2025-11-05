@@ -35,6 +35,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-asyncio httpx pylint black python-dotenv
           pip install pydantic pydantic-settings fastapi uvicorn sqlalchemy PyJWT
+          pip install alembic asyncpg python-multipart prometheus-fastapi-instrumentator
 
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
