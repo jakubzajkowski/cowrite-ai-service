@@ -1,8 +1,9 @@
 """Service to handle text embeddings and storage in ChromaDB."""
 
-import re
 import asyncio
+from typing import List
 from sentence_transformers import SentenceTransformer
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.ai.chroma_client import ChromaClient
 from app.services.files.s3_service import S3Client
@@ -21,15 +22,35 @@ class EmbeddingService:
         db: AsyncSession,
     ):
         self.chroma_client = chroma_client
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.model = SentenceTransformer("intfloat/multilingual-e5-base")
         self.s3_client = s3_client
         self.text_extractor = text_extractor_service
         self.chat_file_repository = ChatFileRepository(db)
 
-    def chunk_text(self, text: str) -> list[str]:
-        """Split text into smaller chunks for embedding."""
-        sentences = re.split(r"(?<=[.!?])\s+", text.strip())
-        return [s for s in sentences if s.strip()]
+    def chunk_text(
+        self, text: str, max_chunk_size: int = 1000, overlap: int = 200
+    ) -> List[str]:
+        """
+        Split text into semantically meaningful chunks with overlap
+        using LangChain RecursiveCharacterTextSplitter.
+        """
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=max_chunk_size,
+            chunk_overlap=overlap,
+            separators=["\n\n", "\n", ".", "!", "?", " ", ""],
+        )
+
+        chunks = splitter.split_text(text)
+        chunks = [c.strip() for c in chunks if c.strip()]
+
+        print("\n🔹 --- CHUNK PREVIEW --- 🔹")
+        print(f"Total chunks created: {len(chunks)}\n")
+        for i, chunk in enumerate(chunks, start=1):
+            print(f"--- Chunk {i} ({len(chunk)} chars) ---")
+            print(chunk)  # pokaz tylko pierwsze 500 znaków
+            print("\n")
+
+        return chunks
 
     async def add_file_embeddings(
         self, file_key: str, file_name: str, user_id: int, file_id: str
@@ -79,7 +100,7 @@ class EmbeddingService:
         return {"status": "ok", "chunks": len(chunks), "file_id": file_id}
 
     async def query_user_file_context(
-        self, user_id: int, file_id: str, query_text: str, n_results: int = 10
+        self, user_id: int, file_id: str, query_text: str, n_results: int = 3
     ) -> dict:
         """Search for similar text chunks in ChromaDB for a given user's file."""
         filters = {"user_id": user_id, "file_id": file_id}

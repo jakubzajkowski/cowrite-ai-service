@@ -11,8 +11,8 @@ class ChromaClient:
 
     def __init__(
         self,
-        collection_name: str = "docs",
-        embedding_model: str = "all-MiniLM-L6-v2",
+        collection_name: str = "document",
+        embedding_model: str = "intfloat/multilingual-e5-base",
     ):
         self.host = settings.chroma_host
         self.port = settings.chroma_port
@@ -45,7 +45,7 @@ class ChromaClient:
         )
 
     async def query(
-        self, query_text: str, n_results: int = 10, filters: dict | None = None
+        self, query_text: str, n_results: int = 3, filters: dict | None = None
     ):
         """Query the collection asynchronously with optional metadata filters."""
         if not query_text.strip():

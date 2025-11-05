@@ -24,7 +24,7 @@ class GeminiTextService:
             query_text=user_prompt,
             max_files=3,
             max_tokens=8000,
-            top_k=10,
+            top_k=3,
         )
 
         full_prompt = PromptComposer.compose(

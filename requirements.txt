@@ -27,3 +27,9 @@ python-docx
 sentence-transformers
 chromadb
 aioboto3
+langchain
+openai
+tiktoken
+langchain-core
+langchain-community
+langchain-text-splitters

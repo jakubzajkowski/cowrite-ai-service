@@ -25,7 +25,7 @@ class FileContextService:
         query_text: str,
         max_files: int = 50,
         max_tokens: int = 10000,
-        top_k: int = 10,
+        top_k: int = 3,
     ) -> str:
         """
         Retrieve relevant semantic context for a query based on embeddings
