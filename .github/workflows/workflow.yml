@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v3
@@ -50,6 +50,7 @@ jobs:
   docker_build_push:
     needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -72,3 +73,8 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/cowrite-ai-service:latest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/cowrite-ai-service:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/cowrite-ai-service:buildcache,mode=max
+      
+      - name: Clean up Docker system
+        if: always()
+        run: |
+          docker system prune -af --volumes || true
