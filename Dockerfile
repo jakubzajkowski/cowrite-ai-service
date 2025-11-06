@@ -1,11 +1,16 @@
+FROM python:3.11-slim as builder
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y build-essential gcc git && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
 FROM python:3.11-slim
 
 WORKDIR /app
-
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+COPY --from=builder /usr/local /usr/local
 
 COPY ./app ./app
 COPY ./prompts ./prompts
@@ -14,5 +19,4 @@ COPY ./alembic.ini .
 COPY ./wait_for_db.py .
 
 EXPOSE 8000
-
 CMD ["sh", "-c", "python wait_for_db.py && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
