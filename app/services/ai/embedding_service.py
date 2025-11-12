@@ -48,7 +48,7 @@ class EmbeddingService:
         print(f"Total chunks created: {len(chunks)}\n")
         for i, chunk in enumerate(chunks, start=1):
             print(f"--- Chunk {i} ({len(chunk)} chars) ---")
-            print(chunk)  # pokaz tylko pierwsze 500 znaków
+            print(chunk)
             print("\n")
 
         return chunks
@@ -174,6 +174,24 @@ class EmbeddingService:
     ) -> dict:
         """Search for similar text chunks in ChromaDB for a given user's file."""
         filters = {"user_id": user_id, "file_id": file_id}
+        return await self.chroma_client.query(
+            query_text=query_text, n_results=n_results, filters=filters
+        )
+
+    async def query_workspace_context(
+        self, workspace_id: int, query_text: str, n_results: int = 3
+    ) -> dict:
+        """Search for similar text chunks across all files in a workspace.
+
+        Args:
+            workspace_id: Workspace identifier.
+            query_text: Query string for semantic search.
+            n_results: Number of top results to return (default: 3).
+
+        Returns:
+            dict: ChromaDB query results with documents, metadatas, and distances.
+        """
+        filters = {"workspace_id": workspace_id}
         return await self.chroma_client.query(
             query_text=query_text, n_results=n_results, filters=filters
         )

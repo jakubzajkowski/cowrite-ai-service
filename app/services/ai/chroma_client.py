@@ -59,7 +59,13 @@ class ChromaClient:
 
         where = None
         if filters:
-            where = {"$and": [{k: {"$eq": v}} for k, v in filters.items()]}
+            if len(filters) == 1:
+                key, value = next(iter(filters.items()))
+                where = {key: {"$eq": value}}
+            else:
+                where = {"$and": [{k: {"$eq": v}} for k, v in filters.items()]}
+        else:
+            where = None
 
         loop = asyncio.get_running_loop()
         results = await loop.run_in_executor(

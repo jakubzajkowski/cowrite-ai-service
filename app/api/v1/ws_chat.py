@@ -7,6 +7,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
+from app.services.ai.workspace_context_service import WorkspaceContextService
 from app.services.chat.chat_service import ChatService
 from app.services.ai.embedding_service import EmbeddingService
 from app.services.ai.file_context_service import FileContextService
@@ -43,11 +44,24 @@ async def get_file_context_service(
     return FileContextService(embedding_service=embedding_service, db=db)
 
 
+async def get_workspace_context_service(
+    embedding_service: EmbeddingService = Depends(get_embedding_service),
+) -> WorkspaceContextService:
+    """Return WorkspaceContextService using EmbeddingService."""
+    return WorkspaceContextService(embedding_service=embedding_service)
+
+
 async def get_gemini_text_service(
     file_context_service: FileContextService = Depends(get_file_context_service),
+    workspace_context_service: WorkspaceContextService = Depends(
+        get_workspace_context_service
+    ),
 ) -> GeminiTextService:
     """Return GeminiTextService using FileContextService."""
-    return GeminiTextService(file_context_service=file_context_service)
+    return GeminiTextService(
+        file_context_service=file_context_service,
+        workspace_context_service=workspace_context_service,
+    )
 
 
 @router.websocket("/ws/chat/{conversation_id}")

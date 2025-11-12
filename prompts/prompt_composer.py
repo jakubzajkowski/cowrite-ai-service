@@ -10,6 +10,7 @@ class PromptComposer:
         user_prompt: str,
         file_context: Optional[str] = None,
         system_instruction: Optional[str] = None,
+        workspace_context: Optional[str] = None,
     ) -> str:
         """Combine system prompt, file context, and user input into a single formatted prompt."""
         sections = []
@@ -19,6 +20,9 @@ class PromptComposer:
 
         if file_context:
             sections.append(f"### File Context\n{file_context.strip()}")
+
+        if workspace_context:
+            sections.append(f"### Workspace Context\n{workspace_context.strip()}")
 
         sections.append(f"### User Prompt\n{user_prompt.strip()}")
 

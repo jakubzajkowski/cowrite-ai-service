@@ -3,6 +3,7 @@
 import json
 from app.schemas.sqs_message import SqsMessageDto
 from app.services.ai.embedding_service import EmbeddingService
+from app.core.settings import settings
 
 
 class SqsMessageHandler:
@@ -46,7 +47,7 @@ class SqsMessageHandler:
                 file_key=msg.s3_key,
                 workspace_id=msg.workspace_id,
                 file_id=str(msg.file_id),
-                bucket="my-notes-bucket",
+                bucket=settings.aws_s3_workspace_bucket,
             )
 
             print(f"[Handler] Successfully processed file_id={msg.file_id}")
