@@ -11,7 +11,6 @@ lint:
 format:
 	black app/ tests/
 
-# Database migrations
 migrate:
 	alembic revision --autogenerate -m "$(msg)"
 

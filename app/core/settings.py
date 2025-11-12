@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     aws_s3_bucket: str = "chat-files-bucket"
     chroma_host: str = "localhost"
     chroma_port: int = 8001
+    sqs_workspace_queue_url: str = (
+        "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/workspace-embeddings"
+    )
 
     model_config = SettingsConfigDict(env_file=".env")
 

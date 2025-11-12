@@ -57,10 +57,10 @@ class S3Client:
 
         return f"s3://{self.bucket}/{key}"
 
-    async def download_file_as_bytes(self, key: str) -> bytes:
+    async def download_file_as_bytes(self, key: str, bucket: str) -> bytes:
         """Download an S3 object as bytes."""
         async for s3 in self._get_client():
-            response = await s3.get_object(Bucket=self.bucket, Key=key)
+            response = await s3.get_object(Bucket=bucket, Key=key)
             async with response["Body"] as stream:
                 content = await stream.read()
 

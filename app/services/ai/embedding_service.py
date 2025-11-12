@@ -57,7 +57,9 @@ class EmbeddingService:
         self, file_key: str, file_name: str, user_id: int, file_id: str
     ) -> dict:
         """Extract text from a file, generate embeddings, and store them in ChromaDB."""
-        file_bytes = await self.s3_client.download_file_as_bytes(file_key)
+        file_bytes = await self.s3_client.download_file_as_bytes(
+            file_key, bucket=self.s3_client.bucket
+        )
 
         text = await self.text_extractor.extract_text(file_name, file_bytes)
         if not text.strip():
@@ -99,6 +101,73 @@ class EmbeddingService:
         await self.chat_file_repository.update_status(file_id, "completed")
 
         return {"status": "ok", "chunks": len(chunks), "file_id": file_id}
+
+    async def add_workspace_file_embeddings(
+        self, file_key: str, workspace_id: int, file_id: str, bucket: str
+    ) -> dict:
+        """Extract text from workspace file, generate embeddings, and store in ChromaDB.
+
+        Args:
+            file_key: S3 object key.
+            workspace_id: Workspace identifier.
+            file_id: File identifier.
+            bucket: S3 bucket name (e.g., 'my-notes-bucket').
+
+        Returns:
+            dict: Processing result with status and metadata.
+        """
+        file_bytes = await self.s3_client.download_file_as_bytes(
+            file_key, bucket=bucket
+        )
+
+        file_name = file_key.split("/")[-1]
+
+        text = await self.text_extractor.extract_text(file_name, file_bytes)
+        if not text.strip():
+            raise ValueError(f"File {file_name} is empty.")
+
+        chunks = self.chunk_text(text)
+        if not chunks:
+            raise ValueError("Failed to chunk text.")
+
+        loop = asyncio.get_running_loop()
+        embeddings = await loop.run_in_executor(
+            None,
+            lambda: self.model.encode(
+                chunks, batch_size=16, convert_to_numpy=True
+            ).tolist(),
+        )
+
+        ids = [
+            f"workspace_{workspace_id}_file_{file_id}_{i}" for i in range(len(chunks))
+        ]
+        metadatas = [
+            {
+                "workspace_id": workspace_id,
+                "file_id": file_id,
+                "file_name": file_name,
+                "chunk_index": i,
+                "s3_key": file_key,
+                "bucket": bucket,
+            }
+            for i in range(len(chunks))
+        ]
+
+        items = {
+            "id": ids,
+            "texts": chunks,
+            "embeddings": embeddings,
+            "metadata": metadatas,
+        }
+
+        await self.chroma_client.add(items)
+
+        return {
+            "status": "ok",
+            "chunks": len(chunks),
+            "file_id": file_id,
+            "workspace_id": workspace_id,
+        }
 
     async def query_user_file_context(
         self, user_id: int, file_id: str, query_text: str, n_results: int = 3
