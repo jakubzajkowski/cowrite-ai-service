@@ -94,28 +94,32 @@ async def websocket_chat(
         while True:
             prompt = await websocket.receive_text()
 
-            # 🧠 Zapisz wiadomość użytkownika w DB
-            message = await chat_service.create_message(
-                conversation_id=conversation_id,
-                prompt=prompt,
-                user_id=user["id"],
-            )
+            try:
+                message = await chat_service.create_message(
+                    conversation_id=conversation_id,
+                    prompt=prompt,
+                    user_id=user["id"],
+                )
 
-            # 🤖 Wygeneruj odpowiedź z Gemini + kontekst z plików
-            response = await gemini_text_service.generate(
-                conversation_id=conversation_id,
-                user_id=user["id"],
-                user_prompt=prompt,
-            )
+                response = await gemini_text_service.generate(
+                    conversation_id=conversation_id,
+                    user_id=user["id"],
+                    user_prompt=prompt,
+                )
 
-            # 💾 Zaktualizuj wiadomość w DB z odpowiedzią AI
-            await chat_service.update_message_response(
-                message_id=message.id,
-                response=response,
-                status="completed",
-            )
+                await chat_service.update_message_response(
+                    message_id=message.id,
+                    response=response,
+                    status="completed",
+                )
 
-            await websocket.send_text(response)
+                await websocket.send_text(response)
+
+            except (ValueError, RuntimeError, ConnectionError) as e:
+                print(f"Error processing chat message: {str(e)}")
+                await websocket.send_text(
+                    "Sorry, an error occurred while processing your message."
+                )
 
     except WebSocketDisconnect:
         print(f"User {user['id']} disconnected")

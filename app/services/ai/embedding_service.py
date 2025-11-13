@@ -195,3 +195,46 @@ class EmbeddingService:
         return await self.chroma_client.query(
             query_text=query_text, n_results=n_results, filters=filters
         )
+
+    async def delete_workspace_file_embeddings(
+        self, workspace_id: int, file_id: str
+    ) -> dict:
+        """Delete all embeddings for a specific file in a workspace.
+
+        Args:
+            workspace_id: Workspace identifier.
+            file_id: File identifier.
+
+        Returns:
+            dict: Deletion result with status.
+        """
+        try:
+            # Get all embeddings for this file using metadata filters
+            result = await self.chroma_client.get(
+                filters={"workspace_id": workspace_id, "file_id": file_id}, limit=1000
+            )
+
+            ids = result.get("ids", [])
+
+            if ids:
+                await self.chroma_client.delete(ids)
+                print(
+                    f"[EmbeddingService] Deleted {len(ids)} embeddings for file_id={file_id}"
+                )
+                return {
+                    "status": "deleted",
+                    "count": len(ids),
+                    "file_id": file_id,
+                    "workspace_id": workspace_id,
+                }
+            print(f"[EmbeddingService] No embeddings found for file_id={file_id}")
+            return {
+                "status": "not_found",
+                "count": 0,
+                "file_id": file_id,
+                "workspace_id": workspace_id,
+            }
+
+        except Exception as e:
+            print(f"[EmbeddingService] Error deleting embeddings: {e}")
+            raise

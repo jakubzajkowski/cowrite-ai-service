@@ -50,12 +50,12 @@ class ChromaClient:
         self, query_text: str, n_results: int = 3, filters: dict | None = None
     ):
         """Query the collection asynchronously with optional metadata filters."""
-        if not query_text.strip():
-            raise ValueError("Query text cannot be empty.")
-
-        query_vec = await asyncio.get_running_loop().run_in_executor(
-            None, lambda: self.model.encode([query_text]).tolist()
-        )
+        if query_text and query_text.strip():
+            query_vec = await asyncio.get_running_loop().run_in_executor(
+                None, lambda: self.model.encode([query_text]).tolist()
+            )
+        else:
+            query_vec = None
 
         where = None
         if filters:
@@ -74,6 +74,34 @@ class ChromaClient:
                 query_embeddings=query_vec,
                 n_results=n_results,
                 where=where,
+            ),
+        )
+        return results
+
+    async def get(self, filters: dict | None = None, limit: int = 1000):
+        """Get documents by filters without semantic search.
+
+        Args:
+            filters: Metadata filters to apply.
+            limit: Maximum number of results to return.
+
+        Returns:
+            dict: Documents matching the filters.
+        """
+        where = None
+        if filters:
+            if len(filters) == 1:
+                key, value = next(iter(filters.items()))
+                where = {key: {"$eq": value}}
+            else:
+                where = {"$and": [{k: {"$eq": v}} for k, v in filters.items()]}
+
+        loop = asyncio.get_running_loop()
+        results = await loop.run_in_executor(
+            None,
+            lambda: self.collection.get(
+                where=where,
+                limit=limit,
             ),
         )
         return results
